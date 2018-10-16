@@ -1,0 +1,19 @@
+openwrt-trojan
+==============
+
+Usage
+---
+
+1. copy these two folders to <openwrt-source-tree>/package.
+
+2. install feeds from openwrt official package repository.
+
+3. use 'make menuconfig' to select trojan package
+
+4. the buildroot generate trojan binary linked to our openssl.
+
+FAQ
+---
+
+Q: May I use openssl from openwrt?
+A: As long as you don't need cutting-edge features, e.g. TLS 1.3
