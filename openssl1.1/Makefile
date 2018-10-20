@@ -76,7 +76,7 @@ endef
 # do NOT interfere original openssl staging dir
 MY_PKG_STAGING_DIR:=$(BUILD_DIR)/openssl1.1_staging_dir
 
-OPENSSL_OPTIONS:= no-shared no-ssl3-method enable-ec_nistp_64_gcc_128
+OPENSSL_OPTIONS:= no-shared no-ssl3-method
 
 # https://github.com/openssl/openssl/issues/1607
 # it seems musl-libc doesn't support this
@@ -90,21 +90,16 @@ OPENSSL_OPTIONS += no-seed
 
 OPENSSL_OPTIONS += no-whirlpool
 
-
-# rfc3779 defaults as enabled in 1.1.0 and disabled in 1.0.2
-
-OPENSSL_OPTIONS += enable-rfc3779
-
 OPENSSL_OPTIONS += no-deprecated
 
 TARGET_CFLAGS := $(filter-out -O%,$(TARGET_CFLAGS)) -O3
 
-OPENSSL_OPTIONS += -DHAVE_CRYPTODEV
+OPENSSL_OPTIONS += enable-devcryptoeng
 
 
 
 
-OPENSSL_TARGET:=linux-$(CONFIG_ARCH)-openwrt
+OPENSSL_TARGET:=linux-$(call qstrip,$(CONFIG_ARCH))-openwrt
 
 
 STAMP_CONFIGURED := $(STAMP_CONFIGURED)_$(shell echo $(OPENSSL_OPTIONS) | mkhash md5)
@@ -154,9 +149,6 @@ define Build/InstallDev
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/openssl $(MY_PKG_STAGING_DIR)/usr/include/
 	$(INSTALL_DIR) $(MY_PKG_STAGING_DIR)/usr/lib/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/lib{crypto,ssl}.a $(MY_PKG_STAGING_DIR)/usr/lib/
-	$(INSTALL_DIR) $(MY_PKG_STAGING_DIR)/usr/lib/pkgconfig
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/{openssl,libcrypto,libssl}.pc $(MY_PKG_STAGING_DIR)/usr/lib/pkgconfig/
-	[ -n "$(TARGET_LDFLAGS)" ] && $(SED) 's#$(TARGET_LDFLAGS)##g' $(MY_PKG_STAGING_DIR)/usr/lib/pkgconfig/{openssl,libcrypto,libssl}.pc || true
 endef
 
 define Build/Clean
@@ -165,15 +157,7 @@ define Build/Clean
 endef
 
 define Package/libopenssl1.1/install
-	$(INSTALL_DIR) $(1)/etc/ssl
-	$(CP) $(PKG_INSTALL_DIR)/etc/ssl/openssl.cnf $(1)/etc/ssl/
-	$(INSTALL_DIR) $(1)/etc/ssl/certs
-	$(INSTALL_DIR) $(1)/etc/ssl/private
-	chmod 0700 $(1)/etc/ssl/private
-	$(INSTALL_DIR) $(1)/usr/lib
-	#$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/libcrypto.so.* $(1)/usr/lib/
-	#$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/libssl.so.* $(1)/usr/lib/
-	$(if $(CONFIG_OPENSSL11_ENGINE),$(INSTALL_DIR) $(1)/usr/lib/$(ENGINES_DIR))
+true
 endef
 
 $(eval $(call BuildPackage,libopenssl1.1))
