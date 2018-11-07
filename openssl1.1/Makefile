@@ -94,9 +94,6 @@ OPENSSL_OPTIONS += no-deprecated
 
 TARGET_CFLAGS := $(filter-out -O%,$(TARGET_CFLAGS)) -O3
 
-OPENSSL_OPTIONS += enable-devcryptoeng
-
-
 
 
 OPENSSL_TARGET:=linux-$(call qstrip,$(CONFIG_ARCH))-openwrt
