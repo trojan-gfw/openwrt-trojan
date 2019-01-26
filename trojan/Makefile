@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2018 wongsyrone
+# Copyright (C) 2018-2019 wongsyrone
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
@@ -7,13 +7,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=trojan
-PKG_VERSION:=1.9.0
+PKG_VERSION:=1.10.0
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/trojan-gfw/trojan.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=f8da22db73ab41abdd0f32f947111eb38bb10dd7
+PKG_SOURCE_VERSION:=fe1f297d12c85e4889a70c94469b5ced9be4d8a0
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 CMAKE_INSTALL:=1
 PKG_BUILD_PARALLEL:=0
