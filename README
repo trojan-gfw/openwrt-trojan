@@ -14,6 +14,8 @@ Usage
 3. use 'make menuconfig' to select trojan package
 
 4. the buildroot generate trojan binary linked to our openssl.
+   You may use 'make package/trojan/{clean,compile} V=99' or
+   whatever you like.
 
 FAQ
 ---
