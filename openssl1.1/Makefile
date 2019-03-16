@@ -12,12 +12,12 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=openssl1.1
 
 PKG_BASE:=1.1.1
-PKG_BUGFIX:=a
-PKG_HASH:=fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41
+PKG_BUGFIX:=b
+PKG_VERSION:=$(PKG_BASE)$(PKG_BUGFIX)
+PKG_HASH:=5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b
 ENGINES_DIR=engines-1.1
 
 
-PKG_VERSION:=$(PKG_BASE)$(PKG_BUGFIX)
 PKG_RELEASE:=1
 PKG_USE_MIPS16:=0
 PATCH_DIR=./patches/$(PKG_BASE)
@@ -114,25 +114,23 @@ define Build/Configure
 			--libdir=lib \
 			$(TARGET_CPPFLAGS) \
 			$(TARGET_LDFLAGS) \
-			$(OPENSSL_OPTIONS) \
+			$(OPENSSL_OPTIONS) && \
+		{ [ -f $(STAMP_CONFIGURED) ] || make clean; } \
 	)
 
 endef
 
-TARGET_CFLAGS += $(FPIC) -I$(CURDIR)/include -ffunction-sections -fdata-sections
+TARGET_CFLAGS += $(FPIC) -ffunction-sections -fdata-sections
 TARGET_LDFLAGS += -Wl,--gc-sections
 
 define Build/Compile
 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
 		CC="$(TARGET_CC)" \
-		ASFLAGS="$(TARGET_ASFLAGS) -I$(PKG_BUILD_DIR)/crypto -c" \
-		AR="$(TARGET_CROSS)ar" \
-		RANLIB="$(TARGET_CROSS)ranlib" \
+		SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) \
 		OPENWRT_OPTIMIZATION_FLAGS="$(TARGET_CFLAGS)" \
 		$(OPENSSL_MAKEFLAGS) \
 		all
-	
 	$(MAKE) -C $(PKG_BUILD_DIR) \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
 		CC="$(TARGET_CC)" \

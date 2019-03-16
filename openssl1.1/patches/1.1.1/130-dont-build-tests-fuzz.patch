@@ -7,11 +7,9 @@ This shortens build time.
 
 Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
 
-diff --git a/Configure b/Configure
-index 2dd423f165..07320b8884 100755
 --- a/Configure
 +++ b/Configure
-@@ -299,7 +299,7 @@ my $auto_threads=1;    # enable threads automatically? true by default
+@@ -299,7 +299,7 @@ my $auto_threads=1;    # enable threads
  my $default_ranlib;
  
  # Top level directories to build
@@ -29,6 +27,3 @@ index 2dd423f165..07320b8884 100755
  
  # Known TLS and DTLS protocols
  my @tls = qw(ssl3 tls1 tls1_1 tls1_2 tls1_3);
--- 
-2.16.4
-
