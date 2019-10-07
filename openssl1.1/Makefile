@@ -12,11 +12,10 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=openssl1.1
 
 PKG_BASE:=1.1.1
-PKG_BUGFIX:=c
+PKG_BUGFIX:=d
 PKG_VERSION:=$(PKG_BASE)$(PKG_BUGFIX)
-PKG_HASH:=f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90
+PKG_HASH:=1e3a91bc1f9dfce01af26026f856e064eab4c8ee0a8f457b5ae30b40b8b711f2
 ENGINES_DIR=engines-1.1
-
 
 PKG_RELEASE:=1
 PKG_USE_MIPS16:=0
@@ -68,7 +67,6 @@ $(call Package/openssl/Default/description)
 This package contains the OpenSSL shared libraries, needed by other programs.
 endef
 
-
 define Package/libopenssl1.1/conffiles
 /etc/ssl/openssl.cnf
 endef
@@ -94,10 +92,7 @@ OPENSSL_OPTIONS += no-deprecated
 
 TARGET_CFLAGS := $(filter-out -O%,$(TARGET_CFLAGS)) -O3
 
-
-
 OPENSSL_TARGET:=linux-$(call qstrip,$(CONFIG_ARCH))-openwrt
-
 
 STAMP_CONFIGURED := $(STAMP_CONFIGURED)_$(shell echo $(OPENSSL_OPTIONS) | mkhash md5)
 

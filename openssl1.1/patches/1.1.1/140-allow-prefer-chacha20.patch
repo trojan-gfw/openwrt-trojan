@@ -1,4 +1,4 @@
-From 286e015bf0d30530707a5e7b3b871509f2ab50d7 Mon Sep 17 00:00:00 2001
+From 4f7ab2040bb71f03a8f8388911144559aa2a5b60 Mon Sep 17 00:00:00 2001
 From: Eneas U de Queiroz <cote2004-github@yahoo.com>
 Date: Thu, 27 Sep 2018 08:44:39 -0300
 Subject: Add OPENSSL_PREFER_CHACHA_OVER_GCM option
@@ -37,7 +37,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
                                     "TLS_AES_128_GCM_SHA256"
 --- a/ssl/ssl_ciph.c
 +++ b/ssl/ssl_ciph.c
-@@ -1466,11 +1466,29 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
+@@ -1467,11 +1467,29 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
      ssl_cipher_apply_rule(0, SSL_kECDHE, 0, 0, 0, 0, 0, CIPHER_DEL, -1, &head,
                            &tail);
  
@@ -67,7 +67,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
  
      /*
       * ...and generally, our preferred cipher is AES.
-@@ -1526,7 +1544,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
+@@ -1527,7 +1545,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
       * Within each group, ciphers remain sorted by strength and previous
       * preference, i.e.,
       * 1) ECDHE > DHE

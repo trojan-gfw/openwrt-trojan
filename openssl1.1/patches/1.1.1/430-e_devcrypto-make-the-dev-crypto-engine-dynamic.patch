@@ -1,7 +1,7 @@
-From 37a5c14aad5051201e4bd18faf1a4b25a824cc30 Mon Sep 17 00:00:00 2001
+From f3cef70b34afde3afd13ce3636232d41533b0162 Mon Sep 17 00:00:00 2001
 From: Eneas U de Queiroz <cote2004-github@yahoo.com>
 Date: Tue, 6 Nov 2018 10:57:03 -0200
-Subject: [PATCH 4/4] e_devcrypto: make the /dev/crypto engine dynamic
+Subject: e_devcrypto: make the /dev/crypto engine dynamic
 
 Engine has been moved from crypto/engine/eng_devcrypto.c to
 engines/e_devcrypto.c.
@@ -19,7 +19,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
 -ENDIF
 --- a/crypto/init.c
 +++ b/crypto/init.c
-@@ -330,18 +330,6 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_engine_
+@@ -329,18 +329,6 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_engine_
      engine_load_openssl_int();
      return 1;
  }
@@ -38,7 +38,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
  
  # ifndef OPENSSL_NO_RDRAND
  static CRYPTO_ONCE engine_rdrand = CRYPTO_ONCE_STATIC_INIT;
-@@ -366,6 +354,18 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_engine_
+@@ -365,6 +353,18 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_engine_
      return 1;
  }
  # ifndef OPENSSL_NO_STATIC_ENGINE
@@ -57,7 +57,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
  #  if !defined(OPENSSL_NO_HW) && !defined(OPENSSL_NO_HW_PADLOCK)
  static CRYPTO_ONCE engine_padlock = CRYPTO_ONCE_STATIC_INIT;
  DEFINE_RUN_ONCE_STATIC(ossl_init_engine_padlock)
-@@ -714,11 +714,6 @@ int OPENSSL_init_crypto(uint64_t opts, c
+@@ -713,11 +713,6 @@ int OPENSSL_init_crypto(uint64_t opts, c
      if ((opts & OPENSSL_INIT_ENGINE_OPENSSL)
              && !RUN_ONCE(&engine_openssl, ossl_init_engine_openssl))
          return 0;
@@ -69,7 +69,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
  # ifndef OPENSSL_NO_RDRAND
      if ((opts & OPENSSL_INIT_ENGINE_RDRAND)
              && !RUN_ONCE(&engine_rdrand, ossl_init_engine_rdrand))
-@@ -728,6 +723,11 @@ int OPENSSL_init_crypto(uint64_t opts, c
+@@ -727,6 +722,11 @@ int OPENSSL_init_crypto(uint64_t opts, c
              && !RUN_ONCE(&engine_dynamic, ossl_init_engine_dynamic))
          return 0;
  # ifndef OPENSSL_NO_STATIC_ENGINE
@@ -83,7 +83,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
              && !RUN_ONCE(&engine_padlock, ossl_init_engine_padlock))
 --- a/engines/build.info
 +++ b/engines/build.info
-@@ -10,6 +10,9 @@ IF[{- !$disabled{"engine"} -}]
+@@ -11,6 +11,9 @@ IF[{- !$disabled{"engine"} -}]
      IF[{- !$disabled{afalgeng} -}]
        SOURCE[../libcrypto]=e_afalg.c
      ENDIF
@@ -91,9 +91,9 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
 +      SOURCE[../libcrypto]=e_devcrypto.c
 +    ENDIF
    ELSE
-     ENGINES=padlock
-     SOURCE[padlock]=e_padlock.c {- $target{padlock_asm_src} -}
-@@ -27,6 +30,12 @@ IF[{- !$disabled{"engine"} -}]
+     IF[{- !$disabled{hw} && !$disabled{'hw-padlock'} -}]
+       ENGINES=padlock
+@@ -30,6 +33,12 @@ IF[{- !$disabled{"engine"} -}]
        DEPEND[afalg]=../libcrypto
        INCLUDE[afalg]= ../include
      ENDIF
@@ -138,7 +138,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
 -
 -/* #define ENGINE_DEVCRYPTO_DEBUG */
 -
--#ifdef CRYPTO_ALGORITHM_MIN
+-#if CRYPTO_ALGORITHM_MIN < CRYPTO_ALGORITHM_MAX
 -# define CHECK_BSD_STYLE_MACROS
 -#endif
 -
@@ -1403,7 +1403,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
 +
 +/* #define ENGINE_DEVCRYPTO_DEBUG */
 +
-+#ifdef CRYPTO_ALGORITHM_MIN
++#if CRYPTO_ALGORITHM_MIN < CRYPTO_ALGORITHM_MAX
 +# define CHECK_BSD_STYLE_MACROS
 +#endif
 +
