@@ -112,7 +112,6 @@ define Build/Configure
 			$(OPENSSL_OPTIONS) && \
 		{ [ -f $(STAMP_CONFIGURED) ] || make clean; } \
 	)
-
 endef
 
 TARGET_CFLAGS += $(FPIC) -ffunction-sections -fdata-sections
