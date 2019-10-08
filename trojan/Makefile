@@ -4,6 +4,7 @@
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
 #
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=trojan
@@ -73,13 +74,23 @@ endef
 
 
 define Package/trojan/install
-	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/trojan $(1)/usr/sbin/trojan
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) ./files/trojan.config $(1)/etc/config/trojan
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/trojan $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/trojan.init $(1)/etc/init.d/trojan
-	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/trojan/config.json $(1)/etc/trojan.json
+	$(INSTALL_BIN) files/trojan.init $(1)/etc/init.d/trojan
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) files/trojan.config $(1)/etc/config/trojan
+	$(INSTALL_DIR) $(1)/etc/trojan
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/examples/client.json-example $(1)/etc/trojan/client.json
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/examples/forward.json-example $(1)/etc/trojan/forward.json
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/examples/nat.json-example $(1)/etc/trojan/nat.json
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/examples/server.json-example $(1)/etc/trojan/server.json
+endef
+
+define Package/trojan/postrm
+#!/bin/sh
+rmdir --ignore-fail-on-non-empty /etc/trojan
+exit 0
 endef
 
 
