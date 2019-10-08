@@ -7,14 +7,12 @@ START=95
 USE_PROCD=1
 #PROCD_DEBUG=1
 
-
 PROG=/usr/sbin/trojan
 CONF=/etc/trojan.json
 
 config_load "trojan"
 
-parse_trojan()
-{
+parse_trojan() {
 	config_get ENABLED "$section" "enabled"
 }
 
@@ -28,7 +26,7 @@ start_service() {
 		procd_set_param user root # run service as user root
 		procd_set_param stdout 1 # forward stdout of the command to logd
 		procd_set_param stderr 1 # same for stderr
-		procd_set_param limits nofile="unlimited"
+		procd_set_param limits nofile="1048576 1048576" # max allowed value can be fetched via /proc/sys/fs/nr_open
 		[ -e /proc/sys/kernel/core_pattern ] && {
 			procd_append_param limits core="unlimited"
 		}
