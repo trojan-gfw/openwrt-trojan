@@ -17,6 +17,10 @@ Usage
    You may use 'make package/trojan/{clean,compile} V=99' or
    whatever you like.
 
+5. edit '/etc/config/trojan' file to enable it.
+   The init script is disabled by default to avoid startup
+   before configuration.
+
 FAQ
 ---
 
