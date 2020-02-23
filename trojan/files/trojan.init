@@ -33,8 +33,13 @@ check_multicore() {
     fi
     echo multicore_ready is $multicore_ready
     local cpunum
-    cpunum=$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}' )
-    if [ "true" = "$multicore_ready" ]; then
+    cpunum=$(grep '^cpu\scores' /proc/cpuinfo | uniq |  awk '{print $4}' )
+    echo real cpu core num is $cpunum
+    if [ "x" = "x$cpunum" ]; then
+        cpunum=$(grep -c '^processor' /proc/cpuinfo )
+        echo all cpu core num is $cpunum, including Hyper-threading virtual cores
+    fi
+    if [ "xtrue" = "x$multicore_ready" ]; then
         return "$cpunum"
     else
         return 1
