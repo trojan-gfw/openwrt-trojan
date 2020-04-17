@@ -10,61 +10,207 @@ USE_PROCD=1
 
 PROG=/usr/sbin/trojan
 CONF=/etc/trojan.json
+CONFIG_FOLDER=/var/etc/trojan
+cpunum=0
 
 config_load "trojan"
 
-parse_trojan() {
-    config_get ENABLED "$section" "enabled"
+check_multicore() {
+	if [ $cpunum = 0 ]; then
+		cpunum=$(grep '^cpu\scores' /proc/cpuinfo | uniq |  awk '{print $4}' )
+		if [ "x" != "x$cpunum" ]; then
+			echo real cpu core num is $cpunum
+		else
+			cpunum=$(grep -c '^processor' /proc/cpuinfo )
+			echo all cpu core num is $cpunum, including Hyper-threading virtual cores
+		fi
+	fi
+	if [ $cpunum = 0 ]; then
+		cpunum=1
+	fi
 }
 
-config_foreach parse_trojan 'trojan'
+gen_config() {
+	test -d "$CONFIG_FOLDER" || mkdir -p "$CONFIG_FOLDER"
+	temp_config="$CONFIG_FOLDER/trojan.${section}.json"
 
-check_multicore() {
-    local is_reuse_port=
-    json_init
-    json_load_file "${CONF}"
-    json_select "tcp"
-    json_get_var is_reuse_port "reuse_port"
-    json_select ".."
-    if [ "1" = "$is_reuse_port" ] || [ "true" = "$is_reuse_port" ]; then
-        multicore_ready=true
-    else
-        multicore_ready=false
-    fi
-    echo multicore_ready is $multicore_ready
-    local cpunum
-    cpunum=$(grep '^cpu\scores' /proc/cpuinfo | uniq |  awk '{print $4}' )
-    echo real cpu core num is $cpunum
-    if [ "x" = "x$cpunum" ]; then
-        cpunum=$(grep -c '^processor' /proc/cpuinfo )
-        echo all cpu core num is $cpunum, including Hyper-threading virtual cores
-    fi
-    if [ "xtrue" = "x$multicore_ready" ]; then
-        return "$cpunum"
-    else
-        return 1
-    fi
+	local old_ns
+	json_set_namespace "$section" old_ns
+	json_init
+
+	config_get run_type "$section" "run_type" "client"
+	json_add_string "run_type" "$run_type"
+
+	config_get local_addr "$section" "local_addr" "0.0.0.0"
+	json_add_string "local_addr" "$local_addr"
+
+	config_get local_port "$section" "local_port" "1080"
+	json_add_int "local_port" "$local_port"
+
+	config_get remote_addr "$section" "remote_addr" "example.com"
+	json_add_string "remote_addr" "$remote_addr"
+
+	config_get remote_port "$section" "remote_port" "443"
+	json_add_int "remote_port" "$remote_port"
+
+	if [ "x$run_type" = "xforward" ]; then
+		config_get target_addr "$section" "target_addr" "127.0.0.1"
+		json_add_string "target_addr" "$target_addr"
+
+		config_get target_port "$section" "target_port" "5901"
+		json_add_int "target_port" "$target_port"
+	fi
+
+	json_add_array "password"
+	add_password() {
+		json_add_string "" "$1"
+	}
+	config_list_foreach "$section" "password" add_password
+	json_close_array
+
+	config_get log_level "$section" "log_level" "1"
+	json_add_int "log_level" "$log_level"
+
+	json_add_object "ssl"
+
+	config_get_bool ssl_verify "$section" "ssl_verify" "true"
+	json_add_boolean "verify" "$ssl_verify"
+
+	config_get_bool ssl_verify_hostname "$section" "ssl_verify_hostname" "true"
+	json_add_boolean "verify_hostname" "$ssl_verify_hostname"
+
+	config_get ssl_cert "$section" "ssl_cert" ""
+	json_add_string "cert" "$ssl_cert"
+
+	if [ "x$run_type" != "xserver" ]; then
+		config_get ssl_cipher "$section" "ssl_cipher" "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
+	else
+		config_get ssl_cipher "$section" "ssl_cipher" "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"
+	fi
+	json_add_string "cipher" "$ssl_cipher"
+
+	config_get ssl_cipher_tls13 "$section" "ssl_cipher_tls13" "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384"
+	json_add_string "cipher_tls13" "$ssl_cipher_tls13"
+
+	config_get ssl_sni "$section" "ssl_sni" ""
+	json_add_string "sni" "$ssl_sni"
+
+	json_add_array "alpn"
+	local ssl_alpn_num
+	ssl_alpn_num=0
+	add_ssl_alpn() {
+		$ssl_alpn_num++
+		json_add_string "" "$1"
+	}
+	if [ $ssl_alpn_num = 0 ]; then
+		json_add_string "" "http/1.1"
+	fi
+	config_list_foreach "$section" "ssl_alpn" add_ssl_alpn
+	json_close_array
+
+	config_get_bool ssl_reuse_session "$section" "ssl_reuse_session" "true"
+	json_add_boolean "reuse_session" "$ssl_reuse_session"
+
+	config_get_bool ssl_session_ticket "$section" "ssl_session_ticket" "false"
+	json_add_boolean "session_ticket" "$ssl_session_ticket"
+
+	config_get ssl_curves "$section" "ssl_curves" ""
+	json_add_string "curves" "$ssl_curves"
+
+	if [ "x$run_type" = "xserver" ]; then
+		config_get ssl_key "$section" "ssl_key" ""
+		json_add_string "key" "$ssl_key"
+
+		config_get ssl_key_password "$section" "ssl_key_password" ""
+		json_add_string "key_password" "$ssl_key_password"
+
+		config_get ssl_prefer_server_cipher "$section" "ssl_prefer_server_cipher" "true"
+		json_add_boolean "prefer_server_cipher" "$ssl_prefer_server_cipher"
+
+		config_get ssl_session_timeout "$section" "ssl_session_timeout" "600"
+		json_add_int "session_timeout" "$ssl_session_timeout"
+
+		config_get ssl_plain_http_response "$section" "ssl_plain_http_response" ""
+		json_add_string "plain_http_response" "$ssl_plain_http_response"
+
+		config_get ssl_dhparam "$section" "ssl_dhparam" ""
+		json_add_string "dhparam" "$ssl_dhparam"
+
+		json_add_object "alpn_port_override"
+		add_ssl_alpn_port_override() {
+			json_add_int `echo $STR | awk -F ':' '{print $1}'` `echo $STR | awk -F ':' '{print $2}'`
+		}
+		config_list_foreach "$section" "ssl_alpn_port_override" add_ssl_alpn_port_override
+		json_close_object
+	fi
+
+	json_close_object
+
+	json_add_object "tcp"
+	if [ "x$run_type" = "xserver" ]; then
+		config_get_bool prefer_ipv4 "$section" "prefer_ipv4" "false"
+		json_add_boolean "prefer_ipv4" "$prefer_ipv4"
+	fi
+
+	config_get_bool no_delay "$section" "no_delay" "true"
+	json_add_boolean "no_delay" "$no_delay"
+
+	config_get_bool keep_alive "$section" "keep_alive" "true"
+	json_add_boolean "keep_alive" "$keep_alive"
+
+	config_get_bool reuse_port "$section" "reuse_port" "false"
+	json_add_boolean "reuse_port" "$reuse_port"
+
+	config_get_bool fast_open "$section" "fast_open" "false"
+	json_add_boolean "fast_open" "$fast_open"
+
+	config_get fast_open_qlen "$section" "fast_open_qlen" "20"
+	json_add_int "fast_open_qlen" "$fast_open_qlen"
+
+	json_close_object
+
+	if [ "x$run_type" = "xserver" ]; then
+		json_add_object "mysql"
+			json_add_boolean "enabled" "false"
+		json_close_object
+	fi
+
+	json_dump -i >"$temp_config"
+	json_cleanup
+	json_set_namespace "$old_ns"
+}
+
+start_instance() {
+	config_get_bool enabled "$section" "enabled" "true"
+	if [ $enabled != 0 ]; then
+		gen_config
+		# cat $temp_config
+		local reuse_num=1
+		config_get_bool reuse_port "$section" "reuse_port" "false"
+		if [ $reuse_port != 0 ]; then
+			check_multicore
+			reuse_num=$cpunum
+			echo reuse_num is $reuse_num
+		fi
+		for i in $(seq 1 ${reuse_num});
+		do
+			# echo $PROG --config $temp_config
+			procd_open_instance
+			procd_set_param command $PROG --config $temp_config
+			procd_set_param user root # run service as user root
+			procd_set_param stdout 1 # forward stdout of the command to logd
+			procd_set_param stderr 1 # same for stderr
+			procd_set_param limits nofile="1048576 1048576" # max allowed value can be fetched via /proc/sys/fs/nr_open
+			[ -e /proc/sys/kernel/core_pattern ] && {
+					procd_append_param limits core="unlimited"
+			}
+			procd_close_instance
+		done
+	else
+		echo "trojan $section is disabled, please check /etc/config/trojan"
+	fi
 }
 
 start_service() {
-    check_multicore
-    local cpunum=$?
-    echo cpunum is $cpunum
-    if [ "1" = "$ENABLED" ] || [ "on" = "$ENABLED" ] || [ "true" = "$ENABLED" ]; then
-        for i in $(seq 1 ${cpunum});
-        do
-            procd_open_instance
-            procd_set_param command $PROG --config $CONF
-            procd_set_param user root # run service as user root
-            procd_set_param stdout 1 # forward stdout of the command to logd
-            procd_set_param stderr 1 # same for stderr
-            procd_set_param limits nofile="1048576 1048576" # max allowed value can be fetched via /proc/sys/fs/nr_open
-            [ -e /proc/sys/kernel/core_pattern ] && {
-                    procd_append_param limits core="unlimited"
-            }
-            procd_close_instance
-        done
-    else
-        echo "trojan is disabled, please check /etc/config/trojan"
-    fi
+	config_foreach start_instance 'trojan'
 }
