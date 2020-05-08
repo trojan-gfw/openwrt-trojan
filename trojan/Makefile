@@ -84,5 +84,9 @@ define Package/trojan/install
 	$(INSTALL_CONF) $(PKG_INSTALL_DIR)/etc/trojan/config.json $(1)/etc/trojan.json
 endef
 
+define Package/trojan/conffiles
+/etc/config/trojan
+/etc/trojan.json
+endef
 
 $(eval $(call BuildPackage,trojan))
