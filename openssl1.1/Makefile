@@ -12,9 +12,9 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=openssl1.1
 
 PKG_BASE:=1.1.1
-PKG_BUGFIX:=g
+PKG_BUGFIX:=k
 PKG_VERSION:=$(PKG_BASE)$(PKG_BUGFIX)
-PKG_HASH:=ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46
+PKG_HASH:=892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5
 ENGINES_DIR=engines-1.1
 
 
@@ -27,11 +27,12 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/openssl-$(PKG_VERSION)
 
 PKG_SOURCE:=openssl-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:= \
-	http://ftp.fi.muni.cz/pub/openssl/source/ \
-	http://ftp.linux.hr/pub/openssl/source/ \
-	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/ \
 	http://www.openssl.org/source/ \
-	http://www.openssl.org/source/old/$(PKG_BASE)/
+	http://www.openssl.org/source/old/$(PKG_BASE)/ \
+	http://ftp.fi.muni.cz/pub/openssl/source/ \
+	http://ftp.fi.muni.cz/pub/openssl/source/old/$(PKG_BASE)/ \
+	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/ \
+	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/old/$(PKG_BASE)/
 
 PKG_LICENSE:=OpenSSL
 PKG_LICENSE_FILES:=LICENSE
